@@ -13,6 +13,7 @@ import numpy as np
 import collections
 import struct
 
+# 各类内外参
 CameraModel = collections.namedtuple(
     "CameraModel", ["model_id", "model_name", "num_params"])
 Camera = collections.namedtuple(
@@ -40,6 +41,7 @@ CAMERA_MODEL_NAMES = dict([(camera_model.model_name, camera_model)
                            for camera_model in CAMERA_MODELS])
 
 
+# 旋转矩阵和四元数的相互转化
 def qvec2rotmat(qvec):
     return np.array([
         [1 - 2 * qvec[2]**2 - 2 * qvec[3]**2,
@@ -65,6 +67,8 @@ def rotmat2qvec(R):
         qvec *= -1
     return qvec
 
+# colmap输出文件格式的读取
+
 class Image(BaseImage):
     def qvec2rotmat(self):
         return qvec2rotmat(self.qvec)
@@ -80,6 +84,8 @@ def read_next_bytes(fid, num_bytes, format_char_sequence, endian_character="<"):
     data = fid.read(num_bytes)
     return struct.unpack(endian_character + format_char_sequence, data)
 
+
+# 读一些3D点的xyzs, rgbs, errors，文件为points3D.txt或points3D.bin
 def read_points3D_text(path):
     """
     see: src/base/reconstruction.cc
@@ -153,6 +159,7 @@ def read_points3D_binary(path_to_model_file):
             errors[p_id] = error
     return xyzs, rgbs, errors
 
+# 读camera的一些参数，文件为cameras.txt或cameras.bin
 def read_intrinsics_text(path):
     """
     Taken from https://github.com/colmap/colmap/blob/dev/scripts/python/read_write_model.py
