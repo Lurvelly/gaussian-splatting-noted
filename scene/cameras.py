@@ -16,6 +16,7 @@ from utils.graphics_utils import getWorld2View2, getProjectionMatrix
 from utils.general_utils import PILtoTorch
 import cv2
 
+# 初始化相机的内外参等属性，获取掩码，计算变换矩阵等
 class Camera(nn.Module):
     def __init__(self, resolution, colmap_id, R, T, FoVx, FoVy, depth_params, image, invdepthmap,
                  image_name, uid,
@@ -87,7 +88,8 @@ class Camera(nn.Module):
         self.projection_matrix = getProjectionMatrix(znear=self.znear, zfar=self.zfar, fovX=self.FoVx, fovY=self.FoVy).transpose(0,1).cuda()
         self.full_proj_transform = (self.world_view_transform.unsqueeze(0).bmm(self.projection_matrix.unsqueeze(0))).squeeze(0)
         self.camera_center = self.world_view_transform.inverse()[3, :3]
-        
+
+# 简化的相机类，只包含了一些基本的属性
 class MiniCam:
     def __init__(self, width, height, fovy, fovx, znear, zfar, world_view_transform, full_proj_transform):
         self.image_width = width

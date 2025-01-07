@@ -23,6 +23,7 @@ from plyfile import PlyData, PlyElement
 from utils.sh_utils import SH2RGB
 from scene.gaussian_model import BasicPointCloud
 
+# 针对colmap输出的文件格式，书写了各个参数的读取方式，相机内外参、四元数等
 class CameraInfo(NamedTuple):
     uid: int
     R: np.array
@@ -46,6 +47,9 @@ class SceneInfo(NamedTuple):
     is_nerf_synthetic: bool
 
 def getNerfppNorm(cam_info):
+    """
+    计算 NeRF++ 归一化参数，包括相机中心和对角线长度。
+    """
     def get_center_and_diag(cam_centers):
         cam_centers = np.hstack(cam_centers)
         avg_cam_center = np.mean(cam_centers, axis=1, keepdims=True)
@@ -69,6 +73,9 @@ def getNerfppNorm(cam_info):
     return {"translate": translate, "radius": radius}
 
 def readColmapCameras(cam_extrinsics, cam_intrinsics, depths_params, images_folder, depths_folder, test_cam_names_list):
+    """
+    读取 Colmap 相机信息。
+    """
     cam_infos = []
     for idx, key in enumerate(cam_extrinsics):
         sys.stdout.write('\r')
@@ -118,6 +125,9 @@ def readColmapCameras(cam_extrinsics, cam_intrinsics, depths_params, images_fold
     return cam_infos
 
 def fetchPly(path):
+    """
+    从 PLY 文件中读取点云数据。
+    """
     plydata = PlyData.read(path)
     vertices = plydata['vertex']
     positions = np.vstack([vertices['x'], vertices['y'], vertices['z']]).T
@@ -127,6 +137,9 @@ def fetchPly(path):
 
 def storePly(path, xyz, rgb):
     # Define the dtype for the structured array
+    """
+    将点云数据存储为 PLY 文件。
+    """
     dtype = [('x', 'f4'), ('y', 'f4'), ('z', 'f4'),
             ('nx', 'f4'), ('ny', 'f4'), ('nz', 'f4'),
             ('red', 'u1'), ('green', 'u1'), ('blue', 'u1')]
@@ -143,6 +156,9 @@ def storePly(path, xyz, rgb):
     ply_data.write(path)
 
 def readColmapSceneInfo(path, images, depths, eval, train_test_exp, llffhold=8):
+    """
+    读取 Colmap 场景信息。
+    """
     try:
         cameras_extrinsic_file = os.path.join(path, "sparse/0", "images.bin")
         cameras_intrinsic_file = os.path.join(path, "sparse/0", "cameras.bin")
@@ -226,6 +242,9 @@ def readColmapSceneInfo(path, images, depths, eval, train_test_exp, llffhold=8):
     return scene_info
 
 def readCamerasFromTransforms(path, transformsfile, depths_folder, white_background, is_test, extension=".png"):
+    """
+    从 transforms 文件中读取相机信息。
+    """
     cam_infos = []
 
     with open(os.path.join(path, transformsfile)) as json_file:
@@ -271,8 +290,9 @@ def readCamerasFromTransforms(path, transformsfile, depths_folder, white_backgro
     return cam_infos
 
 def readNerfSyntheticInfo(path, white_background, depths, eval, extension=".png"):
-
-    depths_folder=os.path.join(path, depths) if depths != "" else ""
+    """
+    读取 NeRF 合成数据集的信息。
+    """
     print("Reading Training Transforms")
     train_cam_infos = readCamerasFromTransforms(path, "transforms_train.json", depths_folder, white_background, False, extension)
     print("Reading Test Transforms")
